@@ -1,34 +1,28 @@
-# Kubernetes Microservices Platform
+# Kubernetes Microservices Platform (Local + K8s)
 
-An end-to-end Kubernetes-based microservices platform that demonstrates
-real-world cloud-native application design, deployment, CI/CD automation,
-monitoring, and troubleshooting.
+## Overview
+This project demonstrates an end-to-end microservice deployed on Kubernetes using Docker images, Kubernetes Deployments/Services, and Kustomize overlays. It is designed as an interview-ready reference for containerization, deployment, and troubleshooting.
 
-## Architecture Overview
+## Architecture (High Level)
+Client (Browser/Curl)
+  → kubectl port-forward
+  → Kubernetes Service (ClusterIP)
+  → Pod (Deployment)
+  → Node.js API
 
-This platform consists of multiple microservices running on Kubernetes.
+## Tech Stack
+- Docker
+- Kubernetes (Docker Desktop)
+- Kustomize overlays
+- Node.js (Express)
 
-**Services**
-- User Service
-- Order Service
-- Payment Service
+## Project Structure
+- `services/` — application services (order-service, user-service, payment-service)
+- `k8s/base` — shared Kubernetes manifests
+- `k8s/overlays/dev` — dev overlay (Kustomize)
 
-**Platform**
-- Docker for containerization
-- Kubernetes for orchestration
-- CI/CD for automated builds/deploy readiness
-- Prometheus + Grafana for monitoring
-
-## How to Run Locally
-
-### Prerequisites
-- Docker Desktop
-- Kubernetes enabled (Docker Desktop / Minikube)
-- kubectl
-
-### Build Docker Images
+## How to Run (Kubernetes)
+### 1) Build Docker image
 ```bash
-docker build -t user-service:local ./services/user-service
-docker build -t order-service:local ./services/order-service
-docker build -t payment-service:local ./services/payment-service
-
+cd services/order-service
+docker build -t order-service:local .
