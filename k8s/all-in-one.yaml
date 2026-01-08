@@ -2,10 +2,11 @@ apiVersion: v1
 kind: Namespace
 metadata:
   name: ms
+
 ---
-############################
+################################
 # ORDER SERVICE
-############################
+################################
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -24,21 +25,29 @@ spec:
       containers:
         - name: order-service
           image: order-service:local
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Never
           ports:
             - containerPort: 3001
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "256Mi"
           livenessProbe:
             httpGet:
-              path: /orders
+              path: /health
               port: 3001
             initialDelaySeconds: 10
             periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /orders
+              path: /health
               port: 3001
             initialDelaySeconds: 5
             periodSeconds: 5
+
 ---
 apiVersion: v1
 kind: Service
@@ -51,10 +60,11 @@ spec:
   ports:
     - port: 3001
       targetPort: 3001
+
 ---
-############################
+################################
 # INVENTORY SERVICE
-############################
+################################
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -73,9 +83,16 @@ spec:
       containers:
         - name: inventory-service
           image: inventory-service:local
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Never
           ports:
             - containerPort: 3000
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "256Mi"
           livenessProbe:
             httpGet:
               path: /inventory
@@ -88,6 +105,7 @@ spec:
               port: 3000
             initialDelaySeconds: 5
             periodSeconds: 5
+
 ---
 apiVersion: v1
 kind: Service
@@ -100,10 +118,11 @@ spec:
   ports:
     - port: 3000
       targetPort: 3000
+
 ---
-############################
+################################
 # GATEWAY
-############################
+################################
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -130,6 +149,13 @@ spec:
               value: http://order-service:3001
             - name: INVENTORY_SERVICE_URL
               value: http://inventory-service:3000
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "256Mi"
           livenessProbe:
             httpGet:
               path: /health
@@ -142,6 +168,7 @@ spec:
               port: 3000
             initialDelaySeconds: 5
             periodSeconds: 5
+
 ---
 apiVersion: v1
 kind: Service
