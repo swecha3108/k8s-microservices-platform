@@ -1,4 +1,4 @@
-# Kubernetes Microservices Platform
+# 🚀Kubernetes Microservices Platform
 
 A production‑style **Kubernetes microservices platform** built with Node.js and Docker, deployed on **Docker Desktop Kubernetes**. The project demonstrates service‑to‑service communication, an API Gateway pattern, health probes, resource management, and NodePort exposure.
 
@@ -231,5 +231,6 @@ kubectl apply -f k8s/all-in-one.yaml --dry-run=client
 ## 👤 Author
 
 Built by **Swecha Siddamshetty** as a hands‑on Kubernetes & DevOps portfolio project.
+GitHub: https://github.com/swecha3108
 
 
