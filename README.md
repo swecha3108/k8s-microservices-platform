@@ -1,210 +1,235 @@
-# 🚀 Kubernetes Microservices Platform (End-to-End)
+# Kubernetes Microservices Platform
 
-An end-to-end **Kubernetes microservices platform** built with **Node.js, Docker, and Kubernetes**.  
-It demonstrates **service discovery (K8s DNS)**, **gateway routing**, **Deployments/Services**, and real-world debugging (e.g., port mismatch causing connection refused).
-
----
-
-## 📌 Key Highlights
-
-- Dockerized Node.js microservices
-- Kubernetes Deployments + Services (ClusterIP)
-- API Gateway exposed via NodePort for local access
-- In-cluster service-to-service calls using Kubernetes DNS (`http://order-service:PORT/...`)
-- Real debugging: fixed “connection refused” by aligning app ports with `containerPort`/`targetPort`
-- Clean repo structure for CI/CD readiness
+A production‑style **Kubernetes microservices platform** built with Node.js and Docker, deployed on **Docker Desktop Kubernetes**. The project demonstrates service‑to‑service communication, an API Gateway pattern, health probes, resource management, and NodePort exposure.
 
 ---
 
-## 🧱 Architecture Overview
+## ✨ Features
+
+* API Gateway pattern (single external entry point)
+* Independent microservices (Order, Inventory)
+* Kubernetes Deployments & Services
+* Liveness & Readiness Probes
+* Resource requests & limits
+* NodePort exposure for local access
+* Clean repo (no `node_modules` committed)
+
+---
+
+## 🏗 Architecture
 
 ```
-Client (browser/curl)
-  |
-  v
-[ Gateway Service ]  (NodePort :30080)
-  |
-  +--> Order Service      (ClusterIP)
-  |
-  +--> Inventory Service  (ClusterIP)
-
-- **Gateway** is the entry point exposed to localhost.
-- **Order/Inventory** are internal services reachable via Kubernetes DNS.
-- Kubernetes Services provide stable networking and load balancing to pods.
+Client (Browser / PowerShell)
+        |
+        |  NodePort :30080
+        v
++-------------------+
+|   Gateway Service |
+|   (Node.js)       |
++-------------------+
+      |        |
+      |        |
+      v        v
++-----------+  +----------------+
+| Order     |  | Inventory      |
+| Service   |  | Service        |
+| :3001     |  | :3000          |
++-----------+  +----------------+
 ```
 
-## Services
+* **Gateway** is the only externally exposed service
+* Internal services communicate via Kubernetes DNS
 
-| Service | Type | Purpose |
-|--------|------|---------|
-| gateway | NodePort | Routes external requests to internal services |
-| order-service | ClusterIP | Returns order data |
-| inventory-service | ClusterIP | Returns inventory data |
-| user-service | ClusterIP | Sample user microservice (optional route if wired) |
-| payment-service | ClusterIP | Payment microservice (optional route if wired) |
+  * `http://order-service:3001`
+  * `http://inventory-service:3000`
 
 ---
 
-## Routes (Gateway)
-
-Base URL (local):  
-`http://localhost:30080`
-
-| Route | Description |
-|------|-------------|
-| `/health` | Gateway health check |
-| `/orders` | Fetch orders via order-service |
-| `/inventory` | Fetch inventory via inventory-service |
-
-> If you later add them, you can also expose:
-> - `/users`
-> - `/payments`
-
----
-
-## 🛠 Tech Stack
-
-* **Language:** Node.js
-* **Containerization:** Docker
-* **Orchestration:** Kubernetes
-* **Local Cluster:** Docker Desktop
-* **Version Control:** Git & GitHub
-
----
-
-## 📂 Project Structure
+## 📁 Project Structure
 
 ```
-k8s-microservices-platform/
-├─ services/
-│ ├─ gateway/
-│ ├─ order-service/
-│ ├─ inventory-service/
-│ ├─ user-service/
-│ └─ payment-service/
-├─ k8s/
-│ ├─ all-in-one.yaml
-│ └─ overlays/
-├─ .gitignore
-└─ README.md
+.
+├── k8s/
+│   └── all-in-one.yaml        # Namespace, Deployments, Services
+├── services/
+│   ├── gateway/
+│   │   ├── Dockerfile
+│   │   ├── package.json
+│   │   └── server.js
+│   ├── order-service/
+│   │   ├── Dockerfile
+│   │   ├── package.json
+│   │   └── app.js
+│   └── inventory-service/
+│       ├── Dockerfile
+│       ├── package.json
+│       └── server.js
+├── .gitignore
+└── README.md
 ```
 
 ---
 
 ## 🚀 Getting Started
 
-### 1️⃣ Prerequisites
+### Prerequisites
 
-* Docker Desktop (with Kubernetes enabled)
-* Node.js (v18+)
+* Docker Desktop (Kubernetes enabled)
 * kubectl
-* Git
+* Node.js (for local builds if needed)
+
+Verify Kubernetes:
+
+```bash
+kubectl get nodes
+```
 
 ---
 
-### 2️⃣ Build Docker Images
+## 🐳 Build Docker Images (local)
+
+From the project root:
 
 ```bash
 docker build -t gateway:local services/gateway
 docker build -t order-service:local services/order-service
 docker build -t inventory-service:local services/inventory-service
-docker build -t user-service:local services/user-service
-docker build -t payment-service:local services/payment-service
 ```
 
-Verify:
-
-```bash
-docker images
-```
+> Images use `imagePullPolicy: IfNotPresent` to work with local Docker Desktop images.
 
 ---
 
-### 3️⃣ Deploy to Kubernetes
+## ☸ Deploy to Kubernetes
+
+Apply all manifests:
 
 ```bash
 kubectl apply -f k8s/all-in-one.yaml
 ```
 
-Check pods:
+Verify:
 
 ```bash
-kubectl get ns
 kubectl get pods -n ms
 kubectl get svc -n ms
 ```
 
 ---
 
-### 4️⃣ Access the Application
+## 🌐 Access the Application
 
-| Endpoint  | URL                                                                  |
-| --------- | -------------------------------------------------------------------- |
-| Health    | [http://localhost:30080/health](http://localhost:30080/health)       |
-| Orders    | [http://localhost:30080/orders](http://localhost:30080/orders)       |
-| Inventory | [http://localhost:30080/inventory](http://localhost:30080/inventory) |
+The Gateway is exposed via **NodePort**:
+
+```
+http://localhost:30080
+```
+
+### Test Endpoints
+
+#### Orders
+
+```powershell
+iwr http://localhost:30080/orders -UseBasicParsing
+```
+
+Response:
+
+```json
+[{"id":"ord-1001","item":"sample","status":"created"}]
+```
+
+#### Inventory
+
+```powershell
+iwr http://localhost:30080/inventory -UseBasicParsing
+```
+
+Response:
+
+```json
+{
+  "inventory": [
+    {"sku":"coffee","available":120},
+    {"sku":"tea","available":80}
+  ]
+}
+```
 
 ---
 
-## 🧠 Debugging & Learnings 
+## ❤️ Health Checks
 
-### ✔ Fixed Service Port Mismatch
+Each service exposes `/health` and is configured with:
 
-* Order service was running on **3001**, but Kubernetes service exposed **3000**
-* Identified via:
+* **Liveness Probe** – restarts unhealthy containers
+* **Readiness Probe** – controls traffic routing
 
-  * `kubectl logs`
-  * `kubectl exec` + in-cluster service calls
-* Fixed by aligning **containerPort, service targetPort, and gateway env vars**
+Example:
 
-### ✔ Windows + OneDrive Git Locks
-
-* Resolved Git rebase/reset failures caused by OneDrive file locks
-* Migrated repo to a non-synced directory for clean Git operations
+```yaml
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 3000
+```
 
 ---
-## ✔ Common Commands
-# Re-deploy
-kubectl apply -f k8s/all-in-one.yaml
 
-# Restart deployments
+## 📊 Resource Management
+
+All services define resource constraints:
+
+```yaml
+resources:
+  requests:
+    cpu: "50m"
+    memory: "64Mi"
+  limits:
+    cpu: "200m"
+    memory: "256Mi"
+```
+
+---
+
+## 🧪 Debugging Tips
+
+```bash
+kubectl logs -n ms deploy/gateway
+kubectl describe pod -n ms <pod-name>
 kubectl rollout restart deploy/gateway -n ms
-kubectl rollout restart deploy/order-service -n ms
-kubectl rollout restart deploy/inventory-service -n ms
+```
 
-# Logs
-kubectl logs -n ms deploy/gateway --tail=100
-kubectl logs -n ms deploy/order-service --tail=100
-kubectl logs -n ms deploy/inventory-service --tail=100
+Use dry‑run to validate YAML:
 
-# Describe
-kubectl describe svc gateway -n ms
-kubectl describe deploy order-service -n ms
+```bash
+kubectl apply -f k8s/all-in-one.yaml --dry-run=client
+```
 
 ---
 
-## 📈 What This Project Demonstrates
+## 🔒 Best Practices Followed
 
-* Real Kubernetes networking knowledge
-* Hands-on Docker image building
-* Production-style debugging
-* Clean Git workflows
-* Microservices communication using Kubernetes DNS
+* No `node_modules` committed
+* Single external entry point
+* Service‑to‑service DNS
+* Explicit container ports
+* Declarative Kubernetes configs
 
 ---
 
-## 🔮 Future Enhancements
+## 📌 Future Enhancements
 
-* Liveness & readiness probes
+* Kubernetes Ingress (NGINX)
 * Horizontal Pod Autoscaler (HPA)
-* CI/CD with Jenkins
-* Monitoring with Prometheus & Grafana
-* Centralized logging (ELK)
+* ConfigMaps & Secrets
+* CI/CD with GitHub Actions
+* Helm charts
 
 ---
 
 ## 👤 Author
 
-**Swecha Siddamshetty**
-Cloud / DevOps Engineer
-GitHub: [https://github.com/swecha3108](https://github.com/swecha3108)
+Built by **Swecha Siddamshetty** as a hands‑on Kubernetes & DevOps portfolio project.
+
+
