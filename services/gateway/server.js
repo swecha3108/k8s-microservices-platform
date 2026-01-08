@@ -5,7 +5,7 @@ const app = express();
 app.use(express.json());
 
 // In Kubernetes these names will work automatically
-const ORDER_SERVICE_URL = process.env.ORDER_SERVICE_URL || "http://order-service:3000";
+const ORDER_SERVICE_URL = process.env.ORDER_SERVICE_URL || "http://order-service:3001";
 const INVENTORY_SERVICE_URL = process.env.INVENTORY_SERVICE_URL || "http://inventory-service:3000";
 
 app.get("/health", (req, res) => res.json({ status: "ok", service: "gateway" }));
